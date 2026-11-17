@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tefas-fon-api"
+version = "0.1.0"
+description = "TEFAS fon fiyatlarını günlük güncellenen statik JSON API'ye dönüştürür (GitHub Pages ile ücretsiz barındırma)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "ofzorbaci" }]
+dependencies = ["pytefas==0.4.1"]
+keywords = ["tefas", "fon", "fund", "turkey", "json", "api"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+tefas-fon-api = "tefas_fon_api.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/ofzorbaci/tefas-fon-api"
+
+[tool.setuptools]
+packages = ["tefas_fon_api"]

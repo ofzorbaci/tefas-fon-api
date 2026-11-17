@@ -1,0 +1,67 @@
+# Fon verisini çekip gh-pages dalına yazar; GitHub Pages bu dalı statik API olarak sunar.
+#
+# Varsayılan olarak yalnızca elle (Actions > Fon verisi > Run workflow) çalışır.
+# Kendi kopyanızda günlük çalıştırmak için aşağıdaki `schedule` satırlarının başındaki
+# # işaretini kaldırın. Veriyi herkese açık yayınlamadan önce README'deki "Veri ve lisans"
+# bölümünü okuyun.
+
+name: Fon verisi
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'main: yeni günler, topup: son günü de yeniden çek'
+        default: main
+        type: choice
+        options: [main, topup]
+  # schedule:
+  #   - cron: '23 4 * * 1-5'   # 07:23 TR, hafta içi
+  #   - cron: '41 9 * * 1-5'   # 12:41 TR, geç gelen fiyatlar için topup
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fon-verisi
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: app
+
+      - name: gh-pages dalı (varsa)
+        run: |
+          if git ls-remote --exit-code --heads "https://github.com/${{ github.repository }}" gh-pages; then
+            git clone --depth 1 --branch gh-pages "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" data
+          else
+            mkdir data && cd data && git init -b gh-pages
+            git remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}"
+          fi
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - run: pip install ./app
+
+      - name: Senkron
+        env:
+          MODE: ${{ github.event_name == 'schedule' && (github.event.schedule == '41 9 * * 1-5' && 'topup' || 'main') || inputs.mode }}
+        run: tefas-fon-api --out data --mode "$MODE"
+
+      - name: Kaydet
+        working-directory: data
+        run: |
+          touch .nojekyll
+          git config user.name "github-actions[bot]"
+          git config user.email "41898341+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then echo "Değişiklik yok"; exit 0; fi
+          git commit -q -m "Fon verisi $(date -u +%F)"
+          git push origin gh-pages
