@@ -6,6 +6,19 @@ GitHub Actions veriyi her gün çeker, GitHub Pages dosyaları API gibi sunar.
 
 [ParaLens](https://github.com/ofzorbaci/ParaLens) uygulamasının veri katmanından ayrıldı.
 
+## Hazır API
+
+Kurulum gerektirmez; anahtar yok, CORS açık. Hafta içi her gün 07:23 ve 12:41'de (TSİ) güncellenir.
+
+- Tanıtım: https://ofzorbaci.github.io/tefas-fon-api/
+- Tüm fonlar: https://ofzorbaci.github.io/tefas-fon-api/funds/latest.json
+- Bir fonun geçmişi: https://ofzorbaci.github.io/tefas-fon-api/funds/history/AAL.json
+- Durum: https://ofzorbaci.github.io/tefas-fon-api/funds/meta.json
+
+```js
+const { funds } = await (await fetch("https://ofzorbaci.github.io/tefas-fon-api/funds/latest.json")).json();
+```
+
 ## Ne üretir?
 
 ```
@@ -45,8 +58,9 @@ Her dosyada `schema` alanı vardır; şema değişirse bu sayı artar.
 Dosyalar şu adreste yayınlanır:
 `https://<kullanıcı-adınız>.github.io/tefas-fon-api/funds/latest.json`
 
-Günlük otomatik güncelleme için `.github/workflows/sync.yml` içindeki `schedule`
-satırlarını açın.
+Güncelleme saatleri `.github/workflows/sync.yml` içindeki `schedule` satırlarındadır.
+Not: GitHub, 60 gün boyunca commit almayan depolarda zamanlanmış iş akışlarını durdurur;
+Actions sekmesinden yeniden etkinleştirebilirsiniz.
 
 ## Yerelde çalıştırma
 
