@@ -1,9 +1,5 @@
 # Fon verisini çekip gh-pages dalına yazar; GitHub Pages bu dalı statik API olarak sunar.
-#
-# Varsayılan olarak yalnızca elle (Actions > Fon verisi > Run workflow) çalışır.
-# Kendi kopyanızda günlük çalıştırmak için aşağıdaki `schedule` satırlarının başındaki
-# # işaretini kaldırın. Veriyi herkese açık yayınlamadan önce README'deki "Veri ve lisans"
-# bölümünü okuyun.
+# Hafta içi iki kez kendiliğinden çalışır; Actions > Fon verisi > Run workflow ile elle de çalışır.
 
 name: Fon verisi
 
@@ -15,9 +11,9 @@ on:
         default: main
         type: choice
         options: [main, topup]
-  # schedule:
-  #   - cron: '23 4 * * 1-5'   # 07:23 TR, hafta içi
-  #   - cron: '41 9 * * 1-5'   # 12:41 TR, geç gelen fiyatlar için topup
+  schedule:
+    - cron: '23 4 * * 1-5'   # 07:23 TR, hafta içi
+    - cron: '41 9 * * 1-5'   # 12:41 TR, geç gelen fiyatlar için topup
 
 permissions:
   contents: write
@@ -59,6 +55,7 @@ jobs:
         working-directory: data
         run: |
           touch .nojekyll
+          cp ../app/pages/index.html index.html
           git config user.name "github-actions[bot]"
           git config user.email "41898341+github-actions[bot]@users.noreply.github.com"
           git add -A
