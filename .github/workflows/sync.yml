@@ -46,10 +46,24 @@ jobs:
 
       - run: pip install ./app
 
+      # Yedek: ParaLens'in fund-data dalı aynı betikle üretilir (gerekirse bir Windows
+      # bilgisayardan). GitHub sunucuları TEFAS'a erişemediğinde ya da ilk kurulumda kullanılır.
+      - name: Yedek veri
+        run: git clone -q --depth 1 --branch fund-data https://github.com/ofzorbaci/ParaLens.git backup
+
+      - name: İlk kurulumda yedekle başla
+        if: hashFiles('data/funds/meta.json') == ''
+        run: python app/scripts/mirror.py --src backup/funds --dst data/funds
+
       - name: Senkron
         env:
           MODE: ${{ github.event_name == 'schedule' && (github.event.schedule == '41 9 * * 1-5' && 'topup' || 'main') || inputs.mode }}
-        run: tefas-fon-api --out data --mode "$MODE"
+        run: |
+          # Yalnızca yeni günler çekilir; TEFAS yanıt vermezse 15 dk sonra yedeğe geçilir.
+          if ! timeout 900 tefas-fon-api --out data --mode "$MODE"; then
+            echo "::warning::TEFAS'a erişilemedi; yedek veriye bakılıyor."
+          fi
+          python app/scripts/mirror.py --src backup/funds --dst data/funds
 
       - name: Kaydet
         working-directory: data
@@ -60,5 +74,10 @@ jobs:
           git config user.email "41898341+github-actions[bot]@users.noreply.github.com"
           git add -A
           if git diff --cached --quiet; then echo "Değişiklik yok"; exit 0; fi
+          # Geçmiş tutulmaz: her güncelleme tek commit olarak yeniden yazılır, dal büyümez.
+          git checkout -q --orphan snapshot
           git commit -q -m "Fon verisi $(date -u +%F)"
-          git push origin gh-pages
+          git push -q -f origin snapshot:gh-pages
+
+      - name: Veri tazeliği
+        run: python app/scripts/mirror.py --dst data/funds --check-age 5
