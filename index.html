@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TEFAS Fon API</title>
+<meta name="description" content="TEFAS fon fiyatları için ücretsiz, günlük güncellenen statik JSON API.">
+<style>
+  :root { --bg:#fff; --fg:#0B1F3A; --muted:#5a6475; --line:#e3e7ee; --accent:#0E7C72; --code:#f4f6f9; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0B1F3A; --fg:#eef2f7; --muted:#a9b4c4; --line:#1f3558; --accent:#4fc3b6; --code:#12294a; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  main { max-width:760px; margin:0 auto; padding:40px 16px 64px; }
+  h1 { margin:0 0 4px; font-size:28px; }
+  h2 { margin:36px 0 8px; font-size:19px; }
+  p, li { color:var(--muted); }
+  a { color:var(--accent); }
+  code { background:var(--code); padding:1px 5px; border-radius:4px; font-size:14px; }
+  pre { background:var(--code); padding:14px; border-radius:8px; overflow-x:auto; font-size:13px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  td { border-top:1px solid var(--line); padding:8px 6px; vertical-align:top; }
+  td:first-child { white-space:nowrap; }
+  #status { font-size:14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>TEFAS Fon API</h1>
+  <p>~2.500 yatırım, emeklilik ve borsa yatırım fonunun günlük fiyatları, statik JSON olarak.
+     Anahtar gerekmez, CORS açıktır. <span id="status"></span></p>
+
+  <h2>Uç noktalar</h2>
+  <table>
+    <tr><td><a href="funds/latest.json"><code>funds/latest.json</code></a></td><td>Tüm fonların son fiyatı, büyüklüğü, yatırımcı sayısı ve 1A/3A/6A/YB/1Y getirileri</td></tr>
+    <tr><td><code>funds/history/&lt;KOD&gt;.json</code></td><td>Bir fonun 5 yıllık günlük fiyat geçmişi, ör. <a href="funds/history/AAL.json">AAL</a></td></tr>
+    <tr><td><code>funds/daily/&lt;YYYY-AA&gt;.json</code></td><td>O ayın her işlem gününde tüm fonların fiyatı</td></tr>
+    <tr><td><a href="funds/meta.json"><code>funds/meta.json</code></a></td><td>Güncelleme zamanı, fon sayısı, fon başına son fiyat tarihi</td></tr>
+  </table>
+
+  <h2>Örnek</h2>
+  <pre>const r = await fetch(location.origin + "/tefas-fon-api/funds/latest.json");
+const { funds } = await r.json();
+const aal = funds.find(f =&gt; f.code === "AAL");
+console.log(aal.price, aal.returns.y1);</pre>
+
+  <h2>Güncelleme</h2>
+  <p>Hafta içi her gün 07:23 ve 12:41'de (TSİ) otomatik güncellenir. Kaynak kod ve şema:
+     <a href="https://github.com/ofzorbaci/tefas-fon-api">github.com/ofzorbaci/tefas-fon-api</a>.</p>
+
+  <h2>Uyarı</h2>
+  <p>Veri kaynağı TEFAS'tır; bu proje TEFAS veya Takasbank ile bağlantılı değildir.
+     Veriler olduğu gibi sunulur, gecikmeli veya hatalı olabilir ve yatırım tavsiyesi değildir.</p>
+</main>
+<script>
+  fetch("funds/meta.json").then(r => r.json()).then(m => {
+    document.getElementById("status").textContent =
+      `Son fiyat tarihi ${m.lastDate}, ${m.fundCount.toLocaleString("tr-TR")} fon.`;
+  }).catch(() => {});
+</script>
+</body>
+</html>
